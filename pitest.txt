@@ -20,7 +20,7 @@ them as floating point numbers with enough precision to exactly represent
 their integral values.  This package differs from other multi-precision
 packages in two important respects:
 
-        1).  The PiTest routines employ some advanced algolorithms that are
+        1).  The PiTest routines employ some advanced algorithms that are
              capable of very high performance,  especially on vector computer
              systems.
 
