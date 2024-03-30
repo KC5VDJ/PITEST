@@ -7,7 +7,7 @@ This should run on anything with ANSI FORTRAN-77 and 64 bit (or 60 bit with at l
 
 You know, thinking of the ETA-10 thing being cursed from the beginning...  What do you think Chippewa Falls was about?  They didn't want another wildcatter doing better than them.
 
-A notable POS, Eddie Chiles, once explained wildcatters to me, and it fits.  Cray was a wildcatter.  A wildcatter was rarely acting dumbfuck cowboy.  Educated people making educated guesses good enough to bet the farm on it, when traditionalists scoff.
+A notable POS, Eddie Chiles, once explained wildcatters to me, and it fits.  Cray was a wildcatter.  A wildcatter was rarely acting dumbfuck cowboy.  Educated people making educated guesses good enough to bet the farm on it, when traditionalists scoff. A bit of a wildcatter myself.
 
 Energy Park was simple crosstown traffic.  A leash.  Lemme guess, short enough to require same day meetings, but long enough to waste half a day every time one is required, just in transit?  A leash.
 
