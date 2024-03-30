@@ -10,3 +10,5 @@ You know, thinking of the ETA-10 thing being cursed from the beginning...  What 
 A notable POS, Eddie Chiles, once explained wildcatters to me, and it fits.  Cray was a wildcatter.  A wildcatter was rarely acting dumbfuck cowboy.  Educated people making educated guesses good enough to bet the farm on it, when traditionalists scoff.
 
 Energy Park was simple crosstown traffic.  A leash.  Lemme guess, short enough to require same day meetings, but long enough to waste half a day every time one is required, just in transit?  A leash.
+
+With Chippewa Falls, Cray actually forced meetings to be meaningful, I would imagine.
