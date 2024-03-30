@@ -1,0 +1,528 @@
+                                    PiTest
+            A High-Performance Multi-Precision Computation Package
+                      and Computer System Integrity Test
+
+                                David H. Bailey
+                           NASA Ames Research Center
+                                 June 23, 1988
+
+                           Document transcribed by
+                              James D. Bryant II
+
+
+                                 INTRODUCTION
+                                 ------------
+
+The PiTest program is a package of FORTRAN subroutines that perform
+arithmetic on floating point numbers of arbitrarily high precision.  The
+PiTest package can also perform arithmetic on very large integers by treating
+them as floating point numbers with enough precision to exactly represent
+their integral values.  This package differs from other multi-precision
+packages in two important respects:
+
+        1).  The PiTest routines employ some advanced algolorithms that are
+             capable of very high performance,  especially on vector computer
+             systems.
+
+        2).  The PiTest routines are completely machine independant.  They
+             run without modification on virtually any computer that has a
+             FORTRAN-77 compiler.
+
+Multi-precision computation refers to performing arithmetic calculations on
+numbers of such high precision that they cannot be accomodated in ordinary
+single-precision or even double precision on existing computers.  Until
+recently,  this field was the exclusive province of a small group of
+computer scientists who employed multi-precision arithmetic routines to probe
+arcane mathematical questions.  Recently,  however,  a number of entirely
+practical applications of multi-precision arithmetic have arisen.  Thes
+include  determining the coefficients of algebraic coding polynomials for
+data redundancy checking,  overcoming severe numerical round-off difficulties
+in the computation of certain Bessel functions,  and implementing
+"public-key" cryptography algorithms for secure communication.  The PiTest
+multi-precision package allows these and similar problems to be solved more
+rapidly than before,  especially on high speed vector computers.
+
+The other application of the PiTest package is as an integrity test for
+scientific computer systems.  When the Cray-2 was installed in late 1985 at
+NASA Ames Research Center,  a very demanding computational test was sought to
+thoroughly test the integrity of both the hardware and the FORTRAN compiler
+for the acceptance test.  Such a test needed to include a wide variety of
+very demanding computational loops,  and it needed to be unambigously
+self-testing and unforgiving of error.  One of the ideas proposed was a
+classic computer integrity test - the computation of the mathematical
+constant Pi.  This test consists of computing the decimal expansion of Pi by
+two completely different algorithms and comparing the output.  Because of
+the nature of such multi-precision calculations,  if even one error occurs in
+either computation,  the result of that calculation will almost certainly be
+completely wrong after an initial correct section,  and the two results will
+differ.  If,  however,  the results of the two independant computations
+agree,  then the computer has performed billions of calculations without error.
+
+The original program that was run for the Cray-2 system test employed a
+prime-modulus multi-precision scheme that is capable of very high
+precision,  up to several billion digits.  The PiTest program referred to in
+this note was developed later and employs a complex FFT multi-precision
+scheme.  This version is several times faster and is thus more effective for
+practical multi-precision applications.  Both versions have continued to
+prove their worth at NASA Ames as system diagnostics.  Frequently these
+programs have uncovered subtle FORTRAN compiler bugs and intermittant
+hardware errors that other diagnostic programs and user codes have missed.
+As a result,  Cray Research,  Inc. now employs these programs to test their
+equipment prior to shipment.  In addition,  the PiTest programs have also
+been run on a number of other computer systems and have been found to be
+similarly effective as FORTRAN compiler and hardware integrity tests on these
+other systems as well.
+
+
+                           ALGORITHMS AND TECHNIQUES
+                           -------------------------
+
+
+The two high-level algorithms employed in PiTest for the computation of Pi
+were only both very recently discovered.  Until 1965,  algorithms used to
+approximate the value of Pi were almost all based on the Taylor series
+expansion of the arctangent function,  which exibits linear convergance.
+This means that successive iterations of the the algorithm increase the
+accuracy of the result by a fixed amount,  usually less than one digit per
+iteration.  Then in 1965 a completely new algorithm was discovered that
+exhibits quadratic convergence.  This means that each iteration approximately
+doubles the number of correct digits.  Although each iteration of the new
+method is more costly in computation than one iteration of the old,  so few
+iterations need to be performed in the new algorithm that the total
+computational cost is much lower,  especially for high precision calculations.
+
+In 1983,  P.B. and J.M. Borwein of Canada discovered an even simpler
+quadratically convergent algorithm for evaluating Pi,  as well as similar
+algorithms for calculating other mathematical constants and functions.
+Finally in 1985,  they were able to generalize their techniques to obtain
+algorithms that exhibit m-th order convergence for any m.  The PiTest program
+employs the Borweins' newly-discovered quartically convergent algorithm.  It
+can be stated as follows:
+
+
+        Let     : a  = 6 - (4 sqrt(2))
+                   0
+
+                  y  = sqrt(2) - 1
+                   0
+
+
+                                   4 1/4
+                         1 - (1 - y )
+                                   k
+        Iterate : y    = ---------------
+                   k+1             4 1/4
+                         1 + (1 - y )
+                                   k
+
+
+
+                                     4    2k+3                  2
+                  a    = a (1 + y   )  - 2     y   (1 + y    + y   )
+                   k+1    k      k+1            k+1      k+1    k+1
+
+
+Then a  converges quartically to 1 / Pi.  In other words,  each iteration
+      k
+approximately quadruples the number of correct digits.  A result calculated
+with this algorithm may be checked be seperately running Borweins'
+quadratically convergent algorithm.  It can be stated as follows:
+
+
+        Let     : a  = sqrt(2)
+                   0
+
+                  p  = 2 + sqrt(2)
+                   0
+
+                                        1
+                                     --------
+                          sqrt(a ) + sqrt(a )
+                                k          k
+        Iterate :  a    = -------------------
+                    k+1            2
+
+
+                          sqrt(a ) (1 + b )
+                                k        k
+                   b    = -----------------
+                    k+1        a  + b
+                                k    k
+
+
+                          p b    (1 + a   )
+                           k k+1       k+1
+                   p    = -----------------
+                    k+1        1 + b
+                                    k+1
+
+
+Then p  converges quadratically to Pi.
+      k
+
+The PiTest multi-precision subroutines employ several advanced algorithms and
+are implemented in a manner that permits the fastest possible execution,
+especially on vector computers.  Even on conventional scalar computers,
+these routines generally run signifigantly faster than other available
+multi-precision packages.
+
+The multi-precision techniques used in PiTest depend on the level of
+precision required.  For modest levels of precision,  less than about 200
+digits (depending on the computer system),  fairly straightforward techniques
+are used,  although they are coded in a manner that permits high-speed vector
+processing in virtually all loops.  Above approxiamtely 200 digits,  advanced
+techniques are used to performa multiplication,  division,  and square root
+extraction.
+
+High-precision multiplication is performed using a technique that employs a
+Fast Fourier Transform (FFT),  which is the fastest known algorithm for this
+purpose.  This technique for perfoming high-precision multiplication has a
+work factor of (n LOG n),  where n is the number of words of precision.  For
+                                                  2
+large n,  this work factor is much less than the n  work factor of
+conventional methods.  The PiTest package includes a FFT routine that has
+been designed for very high performance in this application,  particularly on
+vector computers.
+
+High-performance division and square root extraction are performed in the
+PiTest package using a variation of the Newton-Raphson iteration,  as follows:
+
+
+                                                 1
+        Let     : a  = Initial approximation of ---
+                   0                             a
+
+
+                  y  = Initial approximation of sqrt(a)
+                   0
+
+
+        Iterate : x    = x  (2 - ax )
+                   k+1    k        k
+
+
+                                   2
+                         y  (3 - ay )
+                          k        k
+                  y    = ------------
+                   k+1        2
+
+
+                                  1         1
+Which converges quadratically to --- and ------- respectively.  Note that
+                                  a      sqrt(a)
+both of these recursions involve only multiplications and simple scalar
+operations.  One additional full-precision multiplication yields the quotient
+and square root,  respectively.  An especially attractive feature of these
+algorithms is that the first iteration may be performed using ordinary
+single-precision arithmetic,  and subsequent iterations may be performed
+using a level of precision that approximately doubles each time.  Thus the
+total cost of computation is only about twice the cost of the final
+iteration,  plus one additional multiplication.  As a result,  a
+high-precision division costs only about five times as much as a
+high-precision multiplication,  and a high-precision square root costs only
+about seven times as much as a high-precision multiplication.
+
+
+                    INSTRUCTIONS FOR USE AS A SYSTEMS TEST
+                    --------------------------------------
+
+Two versions of the PiTest package are available.  One is designed for
+computers whose single-precision floating point data type is 64 bits (or 60
+bits) with at least 46 mantissa bits.  The other is designed for computers
+with 32 bit single-precision floating point arithmetic,  and where
+double-precision is required to obtain 64-bit floating point arithmetic.  The
+PiTest package will not run on a computer that does not have a 64 bit (or 60
+bit) floating point arithmetic available from FORTRAN.
+
+The PiTest package includes the main program PI4,  which performs Borweins'
+quartically convergent algorithm to evaluate Pi to a specified number of
+digits,  and then outputs the result on FORTRAN unit 1.  The program as
+delivered is set to compute 24,570 digits of Pi.  It requres approximately
+150,000 64 bit words of main memory and runs in seven seconds CPU time on a
+Cray-XMP supercomputer or in about 90 minutes on a VAX-11/785.  The precision
+level may be increased or decreased by changing the value of MX in the
+PARAMETER statement after the initial comment section of the PiTest main
+program.  Increasing MX by one approximately doubles the digits,  the memory
+requirement,  and the CPU time.  Similarly,  reducing MX by one cuts the
+number of digits,  the memory requirement,  and the CPU time approximately in
+half.
+
+The result of running the standard PiTest program may be checked with
+replacing the main program PI4 with the main program PI2 that is contained in
+a seperate file,  and running PI2 to produce a second result on FORTRAN unit
+1.  A simple file comparision utility,  such as 'cmp' on UNIX machines,  may
+then be used to compare the two output files.  If both programs were compiled
+and executed correctly,  the two output files should agree up to the last 15
+digits or so.  Once an output file has been verified in this manner,  it may
+be saved as a reference file.  Thereafter it is better to use PI4 for routine
+testing,  since PI4 runs faster and exercises the same multi-precision
+routines as PI2.
+
+
+               INSTRUCTIONS FOR USE AS A MULTI-PRECISION PACKAGE
+               -------------------------------------------------
+
+The PiTest multi-precision subroutines can perform floating point computation
+on numbers of virtually unlimited precision.  The only limitations to the
+precision level are those imposed by the amount of available main memory and
+the machine round-off error.  Floating point round-off error is only a factor
+above several million digits,  depending on the computer being used,  because
+the FFT multiplication technique can no longer reliably recover the exact
+multiplication pyramid sums.  For users who want to experiment with such
+progigiously high precision,  a check is built into the code to guard against
+severe round-off error.  This check is normally commented out (see the end of
+the subroutine MLMULX) but it may be re-enabled if needed.  This check code
+may also be used as a validity check for normal multi-precision usage,  as
+follows:
+
+        1).  Uncomment the check code.
+        2).  Adjust the tolerance value of 0.25 to a smaller value.
+
+Some experimentation may be required to find a tolerance value just above the
+normal round-off error level.  Once this has been done,  if a round-off error
+occurs during a run that is signifigantly higher than the normal value,  then
+it is likely that a hardware error has occurred.
+
+    /---------------------------------------------------------------------\
+    |NAME    FUNCTION                                                     |
+    |---------------------------------------------------------------------|
+    |MPSMC   Performs SP -> MP conversion                                 |
+    |MPMSC   Performs MP -> SP conversion                                 |
+    |MPEQ    Sets one MP number equal to another                          |
+    |MPADD   MP + MP = MP                                                 |
+    |MPSUB   MP - MP = MP                                                 |
+    |MPMUL1  MP * SP = MP                                                 |
+    |MPDIV1  MP / MP = SP                                                 |
+    |MPDIV2  MP / SP = MP                                                 |
+    |MPRAND  Returns random MP number ( 0 <= MP <= 1 )                    |
+    |MPINFR  Returns the integer and fractional parts of an MP number     |
+    |MPFMT   Formats a MP number for output                               |
+    |MPCFFT  Initializes the array U in common MPCOM2 and performs FFT's  |
+    |MPMULX  MP * MP = DMP                                                |
+    |MPDIVX  MP / MP = MP                                                 |
+    |MPSQRX  sqrt(MP)                                                     |
+    \---------------------------------------------------------------------/
+
+      Table 1 - Multi-precision computation routines available in the
+                PiTest package.
+
+Both the single precision and double precision versions of the package
+include the subroutines shown in Table 1.  A number of other subroutines are
+part of the package but are not listed in the table because they are not
+intended to be directly called in normal usage.  For users of the
+single-precision versin of PiTest,  SP denotes ordinary single-precision
+floating point numbers.  For users of the double-precision version of
+PiTest,  SP denotes ordinary double-precision numbers.  MP denotes
+multi-precision (NW mantissa words),  and DMP denotes souble multi-precision
+(2 * NW mantissa words).
+
+In the following discussion,  ALL floating point variables are assumed to be
+64 bit (or 60 bit) floating point variables.  In addition,  64 bit (or 60
+bit) data is to be inferred in ALL references to "cells",  "locations",
+etc.  In particular ALL scratch space requirements are to be interpreted in
+units of 64 bit (or 60 bit) storage locations.
+
+The format of the multi-precision MP numbers is as follows :
+
+        WORD(s)        CONTAIN(s)
+        --------------------------------------------
+        1              Sign      ( 1.0, 0.0, -1.0 )
+                                               6
+        2              Exponent  ( powers of 10 )
+        3 to (NW + 2)  Mantissa
+
+If the sign is zero,  then all other words must contain zero.  If the siign
+is non-zero,  then word three must be non-zero.  The decimal point is assumed
+after the first mantissa word for numbers with zero exponent.  The radix of
+                         6
+this representation is 10  so that each mantissa word contains a floating
+                                                            6
+whole number between zero and 999,999.  The decimal radix 10  has been used
+instead of a binary radix so that expensive binary to decimal conversion is
+not necessary for output.
+
+The format for the double multi-precision DMP numbers is the same as the MP
+numbers except that the DMP numbers have twice as many mantissa words,  for a
+total of 2 * NW + 2 words.  Note that only MLMULX explicitly computes with
+DMP numbers.  Other operations may be easily performed on DMP numbers by
+merely doubling NW and,  if necessary,  increasing MW by one.  If this is
+done,  be sure that the scratch arrays in calls to MPMULX,  MPDIVX,  and
+MPSQRX have sufficient scratch space,  and remember to restore NW and MW to
+their previous values after DMP computations are complete.
+
+To initialize the package,  the variables ND,  NW,  MW,  IDB,  LDB,  and NDB
+must be set in common block MPCOM1.  ND is the requested number of digits of
+precision.  NW is the number of words of precision,  which should be set to
+(ND / 6) + 1.  All MP variables must be dimensioned at least NW + 2 and DMP
+variables should be dimensioned at least (2 * NW) + 2 (twice the amount for
+MP variables will suffice).  MW is used in subroutines MLMULX,  MLDIVX,  and
+MLSQRX.  When ND is less than about 200 (depending on the system),  MW may be
+set to zero.  For higher levels of precision,  the only permissiable values
+           MW-2
+of NW are 2    ,  and both MW and NW must be set in common MPCOM1 by the
+user.  In addition,  prior to calling MPMULX,  MPDIVX,  or MPSQRX for these
+                                                           MX+1
+higher levels of precision,  the user must first allocate 2     cells in the
+array U of common block MPCOM2 in the user's main program,  and the user must
+initialize the FFT routine to by calling MPCFFT with 0 as the first
+argument.  Here MX is the largest value of MW that will be used.
+
+The variable IDB is a debug flag and ordinarily should be set to zero.
+Setting IDB to an integer between 5 and 9 (or greater) produces debug
+printouts in varying degrees from the MP subroutines.  Values of IDB between
+1 and 4 are reserved for the user's program.  LDB is the logical unit number
+for the debug output,  and NDB is the number of words output in the debug
+printout of a MP number.  Typically,  LDB is set to 6,  and NDB is set to 16.
+
+Common data has been divided into two seperate commmon blocks to facilitate
+efficient multitasking.  The parameters in MPCOM1 may be frequently changed
+by a user program anbd therefore should be declared TASK COMMON or the
+equivilent.  The array U in common MPCOM2,  however,  is not intended to be
+altered after it is first initialized.  For this reason,  and since U may be
+a very large array,  it makes more sense for MPCOM2 to be an ordinary global
+common.  Except for the data in these two common blocks,  no variables are
+global or need to be "saved".
+
+
+                                 SAMPLE OUTPUT
+                                 -------------
+
+The PiTest program has no input file.  For a standard run of the Pi
+calculation,  the only values that need to be set are the value of MX (the
+precision parameter) and LDB (the standard output unit number).  Both of
+these may be set by editing the program file itself.
+
+The output of the PiTest program consists of a few lines on the standard
+output unit and the decimal expansion of Pi,  which is putput on FORTRAN unit
+1.  The output on the standard outputy unit typically looks like this :
+
+
+PI4 COMPUTATION TEST -- COMPLEX FFT MP VERSION
+
+MW = 14    NW =     4096    ND =    24570
+
+ITERATION    1    7
+ITERATION    2    7
+ITERATION    3    7
+ITERATION    4    7
+ITERATION    5    7
+ITERATION    6    7
+ITERATION    7    7
+
+CPU TIME =         7.1543 SECONDS.
+
+
+The first two lines of the output on FORTRAN unit 1 should look like this :
+
+10 ^          0 x  3.
+1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679
+8214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196
+
+[Original document contains 11 lines of output]
+
+
+                          ENVIRONMENTAL REQUIREMENTS
+                          --------------------------
+
+The PiTest program,  unlike other multi-precision packages,  is written to be
+virtually independant of hardware or software.  It will run on any computer
+system that supports an ANSI certified FORTRAN-77 compiler and 64 bit floating
+point arithmetic (or 60 bit floating point arithmetic with at least 46
+mantissa bits).  The only hardware specification that needs to be noted is
+whether 64 bit (or 60 bit) floating point data is the single-precision data
+type or the double-precision data type.
+
+There are a few minor system-dependant items that should be noted by users.
+At the end of the PI4 program file are four simple utility routines : XMAX,
+XRAND,  XTIME,  and XABORT.  These subroutines are included for completeness
+only,  as most FORTRAN systems have library routines to perform these
+functions.  Users should immediately examine these four routines and replace
+calls to them with calls to appropriate library routines.  However,  the
+PiTest package will run correctly as a system test without changes to these
+routines.
+
+Another item that may cause some difficulty on some systems is that the
+PiTest routines do not have carriage control characters in the first column
+of the FORMAT statements.  Some systems require a blank in the first column,
+especially for messages on the standard output unit,  and so these FORMAT
+statements may need to be changed.  The PiTest program should run as is
+without such changes,  though,  because only general information is output on
+the standard output unit.
+
+Users of scalar computers should search through the program code for the
+string "scalar",  which is contained in comments that indicate where code
+optimizations may be perrformed to improve performance on scalar systems.
+For example,  the parameter MI,  which is used in MLMULX,  MLDIVX,  and
+MLSQRX,  should be set to about 5 on scalar computers for optimum performance.
+
+Users of vector computers should note that vectorizable DO loops which are
+often not automatically vectorized by FORTRAN compilers are preceeded by a
+comment indicating that they are vectorizable.  If the compiler output on the
+system you are using indicates that some of these loops did not automatically
+vectorize,  insert the required directive line in the code in order to obtain
+full vectorization.  Also,  in a few instances where vectorization is not
+safe,  this is also indicated.
+
+The PiTest program has been found to work correctly on a variety of computer
+systems.  Here is a partial list of these systems:
+
+        Computer         Operating System   FORTRAN compiler
+        ----------------------------------------------------
+        Cray-2           Unicos 4.0         CFT-77 4.0
+        Cray X-MP        COS 1.14           CFT    1.14
+        Cray X-MP        Unicos 2.0         CFT-77 2.0
+        CDC 205          VSOS 644G          FORTRAN 200 644G
+        CDC Cyber 170    NOS-SE             FTN5
+        DEC VAX 11/785   Unix V.2           F77 V.2
+        DEC VAX 11/785   VMS 4.2            VAX FORTRAN 4.2
+        SGI IRIS 4-D     4D 1-2.0           f77 2.0
+        Convex C-1       Unix 3.0           Convex FORTRAN 1.8
+        Apple Mac II     Finder             MS-FORTRAN
+        IBM PC / 8087    MS-DOS             MS-FORTRAN
+        ISA 486DX2/66    FreeBSD 1.1.5.1    f2c/gcc [/usr/bin/f77] 
+        Tyan Thunder2 [dual pII-333]   FreeBSD 4.0-current  f77 
+
+
+                         TAPE FORMAT AND INSTALLATION
+                         ----------------------------
+
+The tape is written in the following format : 9 track,  1600 bpi,
+unlabeled,  unblocked ASCII.  The first four files,  which contain FORTRAN
+source code,  are written with fixed length records 80 characters long.  The
+fifth file,  which contains sample output,  is written with fixed length
+records 100 characters long.  The description of the files on the tape is as
+follows:
+
+        1).  FORTRAN source code for the single-precision quartically
+             convergent version of the PiTest package.  Includes calling
+             program and multi-precision routines.
+
+        2).  FORTRAN source code for the single-precision quadratically
+             convergent version of the PiTest package.  Calling program
+             only - to be used with the multi-precision routines from file 1.
+
+        3).  FORTRAN source code for the double-precision quartically
+             convergent version of the PiTest package.  Includes calling
+             program and multi-precision routines.
+
+        4).  FORTRAN source code for the double-precision quadratically
+             convergent version of the PiTest package.  Calling program
+             only - to be used with the multi-precision routines from file 3.
+
+        5).  Output on FORTRAN unit 1 from a PiTest run (24,570 digits).
+
+        6).  Files six through ten are identical to one through five.
+
+
+
+-------------------------------------------------------------------------------
+
+This file was transcribed from the original documentation by James D. Bryant II
+on December 23, 1990.  I may have made some typos and / or omissions,  and
+will not be held responsible for anything that may happen if this information
+is used for anything but informational purposes.  I have tried to accurately
+reproduce the original document (although a few corrections and cosmetic
+changes have been made).  Please write NASA for the original for the final
+word on anything here.  This release of the documentation is UNOFFICIAL,  I
+am in no way affiliated with NASA.
