@@ -2115,7 +2115,7 @@ C   of the time display to make standard output more readable.
 C
       IMPLICIT DOUBLE PRECISION (A-H, O-Z)
       CHARACTER*1 PID
-      PARAMETER  (MX = 23, NX = 2 ** (MX-2) + 2, NDX = 6 * (NX - 3),
+      PARAMETER  (MX = 14, NX = 2 ** (MX-2) + 2, NDX = 6 * (NX - 3),
      $  NU = 8 * NX)
       DIMENSION  A(NX), Y(NX), C1(NX), X1(NX), X2(NX), X3(NX), X4(2*NX),
      $  S(15*NX), PID(NDX+100)
